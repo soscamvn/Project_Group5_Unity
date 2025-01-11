@@ -1,0 +1,11 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: ""
+    relative_path: /home/vietanh/catkin_ws/src/ur10e_rg2.urdf
+    xacro_args: ""
+  SRDF:
+    relative_path: config/ur10e_rg2.srdf
+  CONFIG:
+    author_name: VietAnh
+    author_email: nhvietanh1910@gmail.com
+    generated_timestamp: 1730901641

@@ -1,0 +1,8 @@
+prefix=/home/vietanh/catkin_ws/devel
+
+Name: ur10e_rg2_config2
+Description: Description of ur10e_rg2_config2
+Version: 0.3.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
