@@ -101,7 +101,7 @@ def plan_pick_and_place(req):
     group_name = "arm"
     move_group = moveit_commander.MoveGroupCommander(group_name)
 
-    move_group.set_planner_id("PRM")
+    move_group.set_planner_id("CHOMP")
     # - PRM
     # - PRMstar
 
