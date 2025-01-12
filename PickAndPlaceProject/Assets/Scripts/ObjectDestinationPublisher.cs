@@ -17,7 +17,14 @@ public class ObjectDestinationPublisher : MonoBehaviour
     GameObject m_Table;
 
     [SerializeField]
-    public GameObject m_Object;
+    public GameObject m_GltfObject;
+
+    [SerializeField]
+    public GameObject m_Object; 
+
+    
+    [SerializeField]
+    Vector3 m_CustomScale = new Vector3(1.0f, 1.0f, 1.0f);
 
     // ROS Connector
     ROSConnection m_Ros;
@@ -28,7 +35,6 @@ public class ObjectDestinationPublisher : MonoBehaviour
         m_Ros.RegisterPublisher<CollisionObjectMsg>(m_TopicName1);
     }
 
-    // Gửi thông tin của bàn
     public void PublishTable()
     {
         var tablePose = new PoseMsg
@@ -56,29 +62,68 @@ public class ObjectDestinationPublisher : MonoBehaviour
             }.ToArray()
         };
 
-        // Gửi bàn
         m_Ros.Publish(m_TopicName1, tableCollisionObject);
         Debug.Log("Published table collision object.");
     }
 
-
     public void PublishObject()
+    {
+        if (m_GltfObject == null)
+        {
+            Debug.LogWarning("GLTF Object is not assigned.");
+            return;
+        }
+
+        MeshFilter[] meshFilters = m_GltfObject.GetComponentsInChildren<MeshFilter>();
+        foreach (MeshFilter meshFilter in meshFilters)
+        {
+            Mesh unityMesh = meshFilter.sharedMesh;
+            if (unityMesh != null)
+            {
+                Quaternion adjustedRotation = meshFilter.transform.rotation * Quaternion.Euler(0, 270, 270); 
+                Vector3 adjustedScale = Vector3.Scale(meshFilter.transform.lossyScale, m_CustomScale); 
+
+                var objectPose = new PoseMsg
+                {
+                    position = meshFilter.transform.position.To<FLU>(),
+                    orientation = adjustedRotation.To<FLU>()
+                };
+
+                var objectCollisionObject = new CollisionObjectMsg
+                {
+                    header = new HeaderMsg
+                    {
+                        frame_id = "world"
+                    },
+                    id = "gltf_object",
+                    operation = CollisionObjectMsg.ADD,
+                    meshes = new MeshMsg[] { ConvertUnityMeshToROS(unityMesh, adjustedScale) },
+                    mesh_poses = new PoseMsg[] { objectPose }
+                };
+
+                m_Ros.Publish(m_TopicName1, objectCollisionObject);
+                Debug.Log($"Published GLTF object collision object from {meshFilter.name} with scale {m_CustomScale}.");
+            }
+        }
+    }
+
+    public void PublishObstacle()
     {
         var objectPose = new PoseMsg
         {
             position = m_Object.transform.position.To<FLU>(),
             orientation = m_Object.transform.rotation.To<FLU>()
         };
-        objectPose.position.z -= 0;
+        objectPose.position.z -= 0; 
 
         var objectCollisionObject = new CollisionObjectMsg
         {
             header = new HeaderMsg
             {
-                frame_id = "world" 
+                frame_id = "world"
             },
-            id = "object", // ID duy nhất cho đối tượng
-            operation = CollisionObjectMsg.ADD, 
+            id = "object", 
+            operation = CollisionObjectMsg.ADD,
             primitive_poses = new List<PoseMsg> { objectPose }.ToArray(),
             primitives = new List<SolidPrimitiveMsg>
             {
@@ -90,8 +135,39 @@ public class ObjectDestinationPublisher : MonoBehaviour
             }.ToArray()
         };
 
-
         m_Ros.Publish(m_TopicName1, objectCollisionObject);
         Debug.Log("Published object collision object.");
+    }
+
+    // Convert Unity mesh to ROS MeshMsg with scale adjustment
+    private MeshMsg ConvertUnityMeshToROS(Mesh mesh, Vector3 scale)
+    {
+        PointMsg[] vertices = new PointMsg[mesh.vertexCount];
+        for (int i = 0; i < mesh.vertexCount; i++)
+        {
+            Vector3 vertex = Vector3.Scale(mesh.vertices[i], scale); 
+            vertices[i] = new PointMsg(vertex.x, vertex.y, vertex.z);
+        }
+
+        int[] triangles = mesh.triangles;
+        MeshTriangleMsg[] rosTriangles = new MeshTriangleMsg[triangles.Length / 3];
+        for (int i = 0; i < triangles.Length; i += 3)
+        {
+            rosTriangles[i / 3] = new MeshTriangleMsg
+            {
+                vertex_indices = new uint[] 
+                { 
+                    (uint)triangles[i], 
+                    (uint)triangles[i + 1], 
+                    (uint)triangles[i + 2] 
+                }
+            };
+        }
+
+        return new MeshMsg
+        {
+            vertices = vertices,
+            triangles = rosTriangles
+        };
     }
 }
