@@ -1,2 +1,0 @@
-ROS-TCP-Endpoint:moveit_msgs:ur10e_rg2_moveit:ur10e_rg2_urdf
--DCATKIN_DEVEL_PREFIX=/home/vietanh/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/vietanh/catkin_ws/install -G Unix Makefiles

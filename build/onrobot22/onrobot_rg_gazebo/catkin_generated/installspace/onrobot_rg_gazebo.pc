@@ -1,8 +1,0 @@
-prefix=/home/vietanh/catkin_ws/install
-
-Name: onrobot_rg_gazebo
-Description: Description of onrobot_rg_gazebo
-Version: 1.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: gazebo_ros
