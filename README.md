@@ -1,4 +1,4 @@
-# Group 7 Project Report
+# Group 5 Project Report
 
 ## Table of Contents
 1. [Introduction](#introduction)
